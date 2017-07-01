@@ -30,8 +30,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\label.json" />
-    <Content Include="data\raw_data\atty.jpg" />
-    <Content Include="LICENSE.TXT" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
