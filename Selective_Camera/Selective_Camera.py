@@ -8,8 +8,8 @@ def main():
     # cost = test_nn.get_cost_train(nn.NeuralNetwork.roll_vec(test_nn.params))
     #test_nn.train()
     test_nn.train()
-    test_nn.save_param('/output1.json')
-    pass
+    test_nn.save_param('output1.json')
+    print("Saved parameters!")
 
 def create_data(img_res_side):
     test_img = PIL.Image.open('data/raw_data/atty.png')
