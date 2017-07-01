@@ -124,7 +124,7 @@ class NeuralNetwork:
         print("Rolled Parameters length:", str(rolled_inital_param.size))
 
         rolled_new_parms = scipy.optimize.fmin_bfgs(f=train_func, x0=rolled_inital_param, fprime=grad_func,disp=True, retall=True, callback = self.optim_callback)
-        self.params  = self.unroll_params(rolled_new_parms)
+        self.params  = self.unroll_params(np.array(rolled_new_parms))
         print("Training Finished!")
 
     def optim_callback(self, xk):

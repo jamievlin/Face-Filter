@@ -12,7 +12,7 @@ def main():
     pass
 
 def create_data(img_res_side):
-    test_img = PIL.Image.open('data/raw_data/atty.jpg')
+    test_img = PIL.Image.open('data/raw_data/atty.png')
     test_img = test_img.resize((img_res_side,img_res_side)).convert('L')
     test_list = []
     img_1_feature = []
