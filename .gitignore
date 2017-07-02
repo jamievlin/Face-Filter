@@ -261,6 +261,6 @@ __pycache__/
 *.pyc
 
 # for privacy reasons, can't include pictures.
-Selective_Camera/Data/raw_data/
-Selective_Camera/Data/test_data/
+Selective_Camera/data/raw_data/
+Selective_Camera/data/test_data/
 label.json
