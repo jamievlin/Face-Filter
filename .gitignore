@@ -251,7 +251,7 @@ paket-files/
 
 # JetBrains Rider
 .idea/
-*.sln.iml
+*.1sln.iml
 
 # CodeRush
 .cr/
@@ -262,4 +262,5 @@ __pycache__/
 
 # for privacy reasons, can't include pictures.
 Selective_Camera/Data/raw_data/
+Selective_Camera/Data/test_data/
 label.json

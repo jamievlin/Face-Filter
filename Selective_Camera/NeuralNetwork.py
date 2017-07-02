@@ -1,33 +1,57 @@
 import numpy as np
 import scipy
 import scipy.optimize
-import json, io
+import json
+import io
+
 
 class NeuralNetwork:
-    def __init__(self,layers = [225, 25, 1], lambda_val = 0):
+    def __init__(self, layers=[225, 25, 1], lambda_val=0):
         self.layers = layers
-        self.rand_max = 0.001;
+        self.rand_max = 0.001
         self.params = [np.matrix((np.random.rand(layers[i], layers[i-1] + 1) * (2 * self.rand_max)) - self.rand_max) for i in range(1, len(layers))]
         self.lambda_val = lambda_val
-        self.train_data = [] # designer matrix form
-        self.test_label = [] # row vector form
+        self.train_data = []  # designer matrix form
+        self.train_label = []  # row vector form
 
+    @classmethod
+    def parse_data(cls, data):
+        return np.matrix(data).getT()
 
-    def load_data(self,train_data, train_label):
+    def load_data(self, train_data, train_label):
         self.train_data = np.matrix(train_data)
         self.train_label = np.transpose(np.matrix(train_label))
 
     def save_param(self, location):
         rolled_params = NeuralNetwork.roll_vec(self.params).tolist()
-        out_object = {'layer_size':self.layers, 'rolled_params':rolled_params} 
+        out_object = {'layer_size': self.layers, 'rolled_params': rolled_params}
         out_text = json.dumps(out_object, indent=True)
         file = io.open(location, 'w')
         file.write(out_text)
         file.close()
 
+    def load_param(self, file_location):
+        param_file = io.open(file_location, 'r')
+        json_text = param_file.read()
+        param_file.close()
+
+        self.load_param_json(json_text)
+
+    def load_param_json(self, json_params_str):
+        param_object = json.loads(json_params_str)
+        layer_data = param_object['layer_size']
+
+        assert (layer_data == self.layers), 'Layer data not equal!'
+
+        rolled_param = np.array(param_object['rolled_params'])
+        self.load_param_str(rolled_param)
+
+    def load_param_str(self, rolled_params):
+        self.params = self.unroll_params(rolled_params)
+
     @classmethod
-    def sigmoid(cls, input):
-        return 1/(1 + np.exp(-input))
+    def sigmoid(cls, input_val):
+        return 1/(1 + np.exp(-input_val))
 
     @classmethod
     def __get_generic_cost__(cls, param, train_data, train_label, lambda_val = 0):
@@ -117,8 +141,8 @@ class NeuralNetwork:
     def train(self):
         print("Starting Training...")
         rolled_inital_param = self.roll_vec(self.params)
-        train_func = lambda param : self.get_cost_train(param)
-        grad_func = lambda param : self.get_grad(param)
+        train_func = lambda param: self.get_cost_train(param)
+        grad_func = lambda param: self.get_grad(param)
 
         print("Initial Cost/Grad:", self.get_cost_train(rolled_inital_param), self.get_grad(rolled_inital_param))
         print("Rolled Parameters length:", str(rolled_inital_param.size))
