@@ -3,6 +3,7 @@ import scipy
 import scipy.optimize
 import json
 import io
+import datetime
 
 
 class NeuralNetwork:
@@ -22,9 +23,20 @@ class NeuralNetwork:
         self.train_data = np.matrix(train_data)
         self.train_label = np.transpose(np.matrix(train_label))
 
-    def save_param(self, location):
+    def save_param(self, location, includemetadata=True, comments=''):
         rolled_params = NeuralNetwork.roll_vec(self.params).tolist()
         out_object = {'layer_size': self.layers, 'rolled_params': rolled_params}
+
+        if includemetadata:
+            out_object['_metadata'] = {
+            'date' : str(datetime.datetime.today()),
+            'num_train_label': len(self.train_data),
+            'cost_val': self.get_cost_train(NeuralNetwork.roll_vec(self.params)),
+            'lambda_val': self.lambda_val
+            }
+        if comments:
+            out_object['_comments'] = comments
+
         out_text = json.dumps(out_object, indent=True)
         file = io.open(location, 'w')
         file.write(out_text)
