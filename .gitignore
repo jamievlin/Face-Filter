@@ -264,3 +264,5 @@ __pycache__/
 Selective_Camera/data/raw_data/
 Selective_Camera/data/test_data/
 label.json
+/Selective_Camera/data/train_data
+/Selective_Camera/data/train_label.json

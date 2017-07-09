@@ -26,10 +26,14 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
-    <Folder Include="data\raw_data\" />
+    <Folder Include="data\test_data\" />
+    <Folder Include="data\train_data\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="data\label.json" />
+    <Content Include="data\label_template.json" />
+    <Content Include="data\test_data\dennis_truong.jpg" />
+    <Content Include="data\train_data\atty.png" />
+    <Content Include="data\train_label.json" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
