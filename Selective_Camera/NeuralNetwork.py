@@ -70,16 +70,16 @@ class NeuralNetwork:
         m = train_data.shape[0]
         hyp = NeuralNetwork.__generic_hyp__(train_data.getT(), param).getT()
         hyp_log = np.log(hyp)
-        cost = -(1/m) * (np.multiply(train_label,hyp_log) + np.multiply((1 - train_label), np.log(1 - hyp)))
+        cost = -(1/m) * sum((np.multiply(train_label, hyp_log) + np.multiply((1 - train_label), np.log(1 - hyp))))
 
-        reg_cost = 0;
+        reg_cost = 0
         if lambda_val > 0:
             for theta in param:
-                penalty_mat = np.power(np.delete(theta, (0), axis=1),2)
+                penalty_mat = np.power(np.delete(theta, 0, axis=1), 2)
                 reg_cost = reg_cost + np.sum(penalty_mat)
-            reg_cost = (lambda_val / ( 2 * m)) * reg_cost
+            reg_cost = (lambda_val / (2 * m)) * reg_cost
 
-        return float(cost + reg_cost)
+        return float(cost) + float(reg_cost)
 
     @classmethod
     def __get_datapoint_grad__(cls, param, train_point, train_label):
