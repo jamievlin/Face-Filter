@@ -25,4 +25,4 @@ this project.
 ## License.
 See LICENSE.MD file. Basically, do what you want as long as you credit me as the
 original creator of this program and acknowledge that I am not responsible
-for anything bad that happens. (It shoudln't).
+for anything bad that happens. (It shoudln't)
