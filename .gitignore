@@ -261,8 +261,10 @@ __pycache__/
 *.pyc
 
 # for privacy reasons, can't include pictures.
-Selective_Camera/data/raw_data/
-Selective_Camera/data/test_data/
+Selective_Camera/data/test_data/*
+Selective_Camera/data/train_data/*
+Selective_Camera/data/trained_params/*
+Selective_Camera/data/train_label.json
+
 label.json
-/Selective_Camera/data/train_data
-/Selective_Camera/data/train_label.json
+
