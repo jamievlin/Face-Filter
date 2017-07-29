@@ -34,6 +34,15 @@ or else Python may throw an error during hypothesis.
 ## Notes
 I could not include actual training data (faces) here due to privacy reasons.
 
+## Disclaimer
+I am not a supporter of face/body shaming. Please do not be a jerk by saying that my
+face filter doesn't like anyone's face. This project is for educaitonal purposes only
+and to explore Machine Learning. 
+
+Even if this program says it doesn't like your face, that doesn't mean everything's over.
+It means that the algorithms doesn't match the database. It's your mind and spirit that matters, 
+not your physical body.
+
 ## Special Thanks
 Andrew Ng, for his awesome Coursera Machine Learning course which the concepts
 taught led to the creation of this project.
@@ -43,4 +52,4 @@ this project.
 ## License.
 See LICENSE.txt file. Basically, do what you want as long as you credit me as the
 original creator of this program and acknowledge that I am not responsible
-for anything bad that happens. (It shoudln't)
+for anything bad that happens. (It shouldn't)
