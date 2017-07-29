@@ -1,6 +1,5 @@
 import NeuralNetwork as nn
 import PIL.Image
-import numpy as np
 import os
 import os.path
 import json
@@ -9,8 +8,9 @@ import datetime
 
 DEBUG_ENABLED = False
 
+
 def main():
-    img_res_side = 25
+    img_res_side = 15
     test_nn = nn.NeuralNetwork([img_res_side ** 2, 25, 1])
     usr_valid_responses = {'T', 'H'}
     usr_response = ''
@@ -18,7 +18,7 @@ def main():
         usr_response = input('(H)ypothesis or (T)rain? ')
 
     if usr_response == 'T':
-        train_data(test_nn)
+        train_data(test_nn, img_res_side)
     elif usr_response == 'H':
         param_file = input('Load params? (Leave blank for default): ')
         if param_file:
@@ -26,9 +26,10 @@ def main():
         hyp_data, *args, img_list = create_test_data('data/test_data/')
         hypothesis(test_nn, hyp_data, img_list)
 
+
 def hypothesis(input_neural_network, data, face_file_list=None):
     assert isinstance(input_neural_network, nn.NeuralNetwork)
-    img_res_side = 25
+    img_res_side = 15
     result = input_neural_network.hypothesis(nn.NeuralNetwork.parse_data(data)).tolist()[0]
 
     for i in range(len(result)):
@@ -44,32 +45,31 @@ def hypothesis(input_neural_network, data, face_file_list=None):
         print('-'*20)
         print()
 
-def train_data(input_neural_network, output_path=None):
+
+def train_data(input_neural_network, img_res_data, output_path=None):
     assert isinstance(input_neural_network, nn.NeuralNetwork)
 
     path_folder = 'data/train_data/'
     label_path = 'data/train_label.json'
 
-    try:
-        label_file = io.open(label_path)
-        json_str = label_file.read()
-        label_file.close()
-    except:
-        raise
+    label_file = io.open(label_path)
+    json_str = label_file.read()
+    label_file.close()
 
     label_obj = json.loads(json_str)
 
-    data, label, *args = create_test_data(path_folder, label_obj, 25)
+    data, label, *args = create_test_data(path_folder, label_obj, img_res_data)
     input_neural_network.load_data(data, label)
     print(str.format('Input size: {0}', str(len(data))))
-    # print('Starting training.')
+    print('Starting training.')
     input_neural_network.train()
-    # print('Training successful.')
+    print('Training successful.')
 
     if output_path is None:
         output_path = str.format('traindata_{0}.json', str(datetime.datetime.now()))
 
-    input_neural_network.save_param(output_path)
+    # input_neural_network.save_param(output_path)
+
 
 def create_test_data(path, label=None, img_res=25):
     img_extensions = {'.jpg', '.png', '.tiff', '.tif'}
@@ -82,7 +82,7 @@ def create_test_data(path, label=None, img_res=25):
         file_path = os.path.join(path, image_file)
         final_data.append(create_data(img_res, file_path))
         if label is not None:
-            final_label.append(label[image_file])
+            final_label.append(float(label[image_file]))
 
         if DEBUG_ENABLED:
             print('Appended', file_path)
