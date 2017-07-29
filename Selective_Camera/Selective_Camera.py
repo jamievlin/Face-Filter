@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import NeuralNetwork as nn
+import numpy as np
 import PIL.Image
 import os
 import os.path
@@ -8,7 +9,12 @@ import json
 import io
 import datetime
 import math
-
+try:
+    import matplotlib.pyplot as plt
+    USE_MATPLOTLIB = True
+except ImportError:
+    plt = None
+    USE_MATPLOTLIB = False
 DEBUG_ENABLED = False
 
 
@@ -19,14 +25,14 @@ def main():
         usr_response = input('(H)ypothesis or (T)rain? ')
 
     if usr_response == 'T':
-        img_res_side = 25
-        train_nn = nn.NeuralNetwork([img_res_side ** 2, 25, 1])
+        img_res_side = 60
+        train_nn = nn.NeuralNetwork([img_res_side ** 2, 900, 400, 25, 1])
         train_data(train_nn, img_res_side, output_path='data/trained_params')
     elif usr_response == 'H':
-        hypothesis_main()
+        hypothesis_main(True)
 
 
-def hypothesis_main():
+def hypothesis_main(show_img=False):
     default_params_dir = 'data/trained_params/'
     file_list = get_file_list(default_params_dir, '.json')
     print('Parameters found: ')
@@ -51,6 +57,16 @@ def hypothesis_main():
     image_res = int(math.sqrt(param_obj['layer_size'][0]))
     hyp_data, *args, img_list = create_test_data('data/test_data/', img_res=image_res)
     hypothesis(test_nn, hyp_data, img_list)
+    if USE_MATPLOTLIB and show_img:
+        plt.gray()
+        test_nn.create_data_vis(9, np.matrix(hyp_data))
+        repeat = 'y'
+        while repeat:
+            for layer in range(len(param_obj['layer_size']) - 1):
+                vis_image = test_nn.create_visualized_image(layer)
+                plt.imshow(vis_image)
+                plt.show()
+            repeat = input('Leave blank to quit')
 
 
 def load_json_obj(file_name):
@@ -67,7 +83,7 @@ def get_file_list(directory, extension):
 
 def hypothesis(input_neural_network, data, face_file_list=None):
     assert isinstance(input_neural_network, nn.NeuralNetwork)
-    result = input_neural_network.hypothesis(nn.NeuralNetwork.parse_data(data)).tolist()[0]
+    result = input_neural_network.hypothesis(data).tolist()[0]
 
     for i in range(len(result)):
         result_hyp = result[i]
@@ -109,7 +125,7 @@ def train_data(input_neural_network, img_res_data, output_path=None, output_name
     if output_path is None:
         output_path = ''  # empty string
 
-    input_neural_network.save_param(os.path.join(output_path, output_name))
+    input_neural_network.save_param(os.path.join(output_path, output_name), includemetadata=True)
 
 
 def create_test_data(path, label=None, img_res=25):

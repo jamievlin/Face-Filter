@@ -4,6 +4,8 @@ import scipy.optimize
 import json
 import io
 import datetime
+import random as rand
+from PIL import Image
 
 DEBUG_FLAG = False
 
@@ -13,32 +15,71 @@ class NeuralNetwork:
         self.layers = layers
         if self.layers is None:
             self.layers = [225, 25, 1]
-        self.rand_max = 0.15
-        self.params = [np.matrix(np.random.uniform(
-            low=-self.rand_max, high=self.rand_max, size=(self.layers[i], self.layers[i-1] + 1)))
+        self.__rand_max__ = 0.15
+        self.__params__ = [np.matrix(np.random.uniform(
+            low=-self.__rand_max__, high=self.__rand_max__, size=(self.layers[i], self.layers[i-1] + 1)))
             for i in range(1, len(layers))]
-        self.lambda_val = lambda_val
-        self.train_data = np.matrix([])  # designer matrix form
-        self.train_label = np.matrix([])  # row vector form
+        self.__lambda_val__ = lambda_val
+        self.__train_data__ = np.matrix([])  # designer matrix form
+        self.__train_label__ = np.matrix([])  # row vector form
+        self.__data_vis__ = []
+        self.__params_comments__ = ''
 
-    @classmethod
-    def parse_data(cls, data):
-        return np.matrix(data).getT()
+    def create_visualized_image(self, layer):
+        if self.__data_vis__[layer] is not None:
+            num_features, num_count = self.__data_vis__[layer].shape
+            base_tiles_count = int(np.ceil(np.sqrt(num_count)))
+            pic_res = int(np.ceil(np.sqrt(num_features)))
+            vis_image = Image.new('L', (pic_res * base_tiles_count, pic_res * base_tiles_count))
+            for result_index in range(num_count):
+                new_array = self.__data_vis__[layer][:, result_index].getT()
+                if new_array.shape[1] < (pic_res ** 2):
+                    new_array = np.concatenate([new_array, [0.0] * ((pic_res ** 2) - new_array.shape[1])])
+                img_array = np.reshape(new_array, (pic_res, pic_res))
+                instance_image = Image.new('L', (pic_res, pic_res))
+                for i in range(pic_res):
+                    for j in range(pic_res):
+                        img_array_val = int(round(img_array[i, j] * 255))
+                        instance_image.putpixel((i, j), img_array_val)
+
+                x_coord = (result_index % base_tiles_count) * pic_res
+                y_coord = (result_index // base_tiles_count) * pic_res
+                vis_image.paste(instance_image, (x_coord, y_coord))
+            return vis_image
+
+    def create_data_vis(self, num_count=-1, vis_data=None):
+        if vis_data is None:
+            vis_data = self.__train_data__
+        m = vis_data.shape[0]
+        if num_count > m:
+            raise ValueError("Can't visualize more than the data count!")
+        mat_shape = (num_count, self.layers[0])  # designer matrix
+        if num_count == m or num_count < 0:
+            num_count = m
+            vis_sample = vis_data
+        else:
+            vis_sample = np.matrix(np.zeros(mat_shape))
+            rand_sample = rand.sample(range(m), num_count)
+            for rand_index in range(num_count):
+                vis_sample[rand_index, :] = vis_data[rand_sample[rand_index], :]  # still in designer matrix form
+        hyp, vis_list, *args = NeuralNetwork.__generic_hyp__(vis_sample.getT(), self.__params__)
+        for a_result in vis_list:
+            self.__data_vis__.append(a_result[1:, :])
 
     def load_data(self, train_data, train_label):
-        self.train_data = np.matrix(train_data)
-        self.train_label = np.matrix(train_label).getT()
+        self.__train_data__ = np.matrix(train_data)
+        self.__train_label__ = np.matrix(train_label).getT()
 
     def save_param(self, location, includemetadata=True, comments=''):
-        rolled_params = NeuralNetwork.roll_vec(self.params).tolist()
+        rolled_params = NeuralNetwork.roll_vec(self.__params__).tolist()
         out_object = {'layer_size': self.layers, 'rolled_params': rolled_params}
 
         if includemetadata:
             out_object['_metadata'] = {
             'date' : str(datetime.datetime.today()),
-            'num_train_label': len(self.train_data),
-            'cost_val': self.get_cost_train(NeuralNetwork.roll_vec(self.params)),
-            'lambda_val': self.lambda_val
+            'num_train_label': len(self.__train_data__),
+            'cost_val': self.get_cost_train(NeuralNetwork.roll_vec(self.__params__)),
+            'lambda_val': self.__lambda_val__
             }
         if comments:
             out_object['_comments'] = comments
@@ -64,7 +105,7 @@ class NeuralNetwork:
         self.__load_param_list__(rolled_param)
 
     def __load_param_list__(self, rolled_params):
-        self.params = self.unroll_params(rolled_params)
+        self.__params__ = self.unroll_params(rolled_params)
 
     @classmethod
     def sigmoid(cls, input_val):
@@ -74,7 +115,8 @@ class NeuralNetwork:
     def __get_generic_cost__(cls, param, train_data, train_label, lambda_val=0):
         assert lambda_val >= 0
         m = train_data.shape[0]
-        hyp = NeuralNetwork.__generic_hyp__(train_data.getT(), param).getT()
+        raw_hyp, *args = NeuralNetwork.__generic_hyp__(train_data.getT(), param)
+        hyp = raw_hyp.getT()
         hyp_log = np.log(hyp)
         cost_comp_1 = np.multiply(-train_label, hyp_log)
         cost_comp_2 = np.multiply(-(1 - train_label), np.log(1 - hyp))
@@ -89,20 +131,14 @@ class NeuralNetwork:
 
         return cost + reg_cost
 
-    # TODO: Check Gradient Error. (shouldn't have error within 0.35 range)
     @classmethod
     def __get_datapoint_grad__(cls, param, train_point, train_label):
         L = len(param) + 1
 
-        # forward propagation
-        a_data = [np.matrix([0])] * L
-        a_data[0] = np.concatenate([np.matrix([1]), train_point], axis=0)
-
         total_grad = []
-        for i in range(1, L):
-            temp_z = param[i-1] * a_data[i-1]
-            unbiased_a = np.matrix(NeuralNetwork.sigmoid(temp_z))
-            a_data[i] = np.concatenate([np.matrix([1]), unbiased_a], axis=0)
+
+        # forward propagation
+        hyp, a_data, *args = NeuralNetwork.__generic_hyp__(train_point, param)
 
         # back propagation
         delta = [np.matrix([0])] * L
@@ -115,7 +151,10 @@ class NeuralNetwork:
             assert l > 0
             raw_a = a_data[l]
             temp_sigmoid_grad = np.multiply(raw_a, (1 - raw_a))
-            delta[l] = np.multiply(param[l].getT() * delta[l+1], temp_sigmoid_grad)
+            adjusted_delta = delta[l+1]
+            if adjusted_delta.shape[0] > param[l].shape[0]:
+                adjusted_delta = adjusted_delta[1:, :]
+            delta[l] = np.multiply(param[l].getT() * adjusted_delta, temp_sigmoid_grad)
 
         for theta_layer in range(0, L-1):
             sliced_delta = delta[theta_layer + 1]
@@ -156,40 +195,29 @@ class NeuralNetwork:
         return np.array(result)
 
     def get_grad(self, param):
-        return NeuralNetwork.roll_vec(NeuralNetwork.get_generic_grad(self.unroll_params(param), self.train_data,
-                                                                     self.train_label, self.lambda_val))
+        return NeuralNetwork.roll_vec(NeuralNetwork.get_generic_grad(self.unroll_params(param), self.__train_data__,
+                                                                     self.__train_label__, self.__lambda_val__))
 
     def get_cost_train(self, param):
-        return NeuralNetwork.__get_generic_cost__(self.unroll_params(param), self.train_data, self.train_label,
-                                                  self.lambda_val)
+        return NeuralNetwork.__get_generic_cost__(self.unroll_params(param), self.__train_data__, self.__train_label__,
+                                                  self.__lambda_val__)
 
     def unroll_params(self, rolled_params):
         new_params = []
         curr_index = 0
-        for theta in self.params:
+        for theta in self.__params__:
             m, n = theta.shape
             new_param_temp = np.matrix(np.reshape(rolled_params[curr_index:curr_index + (m*n)], (m, n)))
             new_params.append(new_param_temp)
             curr_index = curr_index + (m * n)
         return new_params
 
-    #@classmethod
-    #def generic_unroll_params(cls, rolled_params, param_template):
-    #    new_params = []
-    #    curr_index = 0
-    #    for theta in param_template:
-    #        (m,n) = theta.shape()
-    #        new_param_temp = np.matrix(np.reshape(rolled_params[curr_index:curr_index + (m*n)], (m,n)))
-    #        new_params.append(new_param_temp)
-    #        curr_index = curr_index + (m * n)
-    #    return new_params
-
     def train(self):
         print("Starting Training...")
 
-        # test_val = self.params[0] - self.unroll_params(self.roll_vec(self.params))[0]
+        # test_val = self.__params__[0] - self.unroll_params(self.roll_vec(self.__params__))[0]
 
-        rolled_inital_param = self.roll_vec(self.params)
+        rolled_inital_param = self.roll_vec(self.__params__)
 
         print("Initial Cost/Grad:", self.get_cost_train(rolled_inital_param), self.get_grad(rolled_inital_param))
         print("Rolled Parameters length:", str(rolled_inital_param.size))
@@ -207,7 +235,7 @@ class NeuralNetwork:
                                                    jac=f_grad, callback=self.optim_callback, options={
                                                        'disp': True
                                                    })['x']
-        self.params = self.unroll_params(np.array(rolled_new_parms))
+        self.__params__ = self.unroll_params(np.array(rolled_new_parms))
         print("Training Finished!")
 
     def optim_callback(self, xk):
@@ -219,20 +247,23 @@ class NeuralNetwork:
             error = scipy.optimize.check_grad(self.get_cost_train, self.get_grad, temp_params, epsilon=0.0001)
             print('Grad Error', error)
         print('-'*25)
-    #@classmethod
-    #def generic_train(cls, nn_inst):
-    #    assert isinstance(nn_inst, NeuralNetwork)
-    #    new_params = scipy.optimize.fmin_bfgs(lambda param : NeuralNetwork.__get_generic_cost__(NeuralNetwork.generic_unroll_params(param, nn_inst.params), nn_inst.train_data, nn_inst.train_label, nn_inst.lambda_val), x0=NeuralNetwork.roll_vec(nn_inst.params), fprime = lambda param : NeuralNetwork.roll_vec(NeuralNetwork.get_generic_grad(NeuralNetwork.generic_unroll_params(param, nn_inst.params), nn_inst.train_data, nn_inst.train_label, nn_inst.lambda_val)) )
-    #    print("Training success!")
-    #    return new_params
 
     @classmethod
     def __generic_hyp__(cls, data, param):
         a = data
+        a_list = []
+        z_list = [np.array([])] # blank array. z_list[0] should never been accessed since a is the raw input data
+
         for theta in param:
             a_with_bias = np.concatenate([np.ones((1, a.shape[1])), a], axis=0)
-            a = NeuralNetwork.sigmoid(theta * a_with_bias)
-        return a
+            a_list.append(a_with_bias)
+            z = theta * a_with_bias
+            a = NeuralNetwork.sigmoid(z)
+            z_list.append(z)
+        a_list.append(np.concatenate([np.ones((1, a.shape[1])), a], axis=0))  # last one
+        return a, a_list, z_list
 
     def hypothesis(self, data):
-        return NeuralNetwork.__generic_hyp__(data, self.params)
+        parsed_data = np.matrix(data).getT()
+        hyp, *args = NeuralNetwork.__generic_hyp__(parsed_data, self.__params__)
+        return hyp
