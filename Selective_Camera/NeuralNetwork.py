@@ -53,18 +53,17 @@ class NeuralNetwork:
         json_text = param_file.read()
         param_file.close()
 
-        self.load_param_json(json_text)
+        self.load_param_json(json.loads(json_text))
 
-    def load_param_json(self, json_params_str):
-        param_object = json.loads(json_params_str)
-        layer_data = param_object['layer_size']
+    def load_param_json(self, json_obj):
+        layer_data = json_obj['layer_size']
 
         assert (layer_data == self.layers), 'Layer data not equal!'
 
-        rolled_param = np.array(param_object['rolled_params'])
-        self.load_param_str(rolled_param)
+        rolled_param = np.array(json_obj['rolled_params'])
+        self.__load_param_list__(rolled_param)
 
-    def load_param_str(self, rolled_params):
+    def __load_param_list__(self, rolled_params):
         self.params = self.unroll_params(rolled_params)
 
     @classmethod

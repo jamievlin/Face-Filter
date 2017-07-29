@@ -25,8 +25,11 @@ _Note: If you use Anaconda, I don't think you need anything else.
 IIRC Anaconda bundles all of these modules on installation._
 
 For training, fill train_label.json with file name and attractiveness 
-(1 for being attractive, 0 otherwise). Fill the training faces into <projectdir>/data/train_data.
-and faces for hypothesis testing to <projectdir>/data/test_data/.
+(1 for being attractive, 0 otherwise). Fill the training faces into <project_dir>/data/train_data.
+and faces for hypothesis testing to <project_dir>/data/test_data/.
+
+Make sure the directory <project_dir>/data/trained_params exists, 
+or else Python may throw an error during hypothesis. 
 
 ## Notes
 I could not include actual training data (faces) here due to privacy reasons.
