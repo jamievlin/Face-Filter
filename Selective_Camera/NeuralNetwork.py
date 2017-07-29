@@ -6,7 +6,7 @@ import json
 import io
 import datetime
 
-DEBUG_FLAG = True
+DEBUG_FLAG = False
 
 
 class NeuralNetwork:
@@ -131,13 +131,13 @@ class NeuralNetwork:
         assert lambda_val >= 0, 'Lambda cannot be less than zero!'
         l = len(param)
         m = train_data.shape[0]  # still in designer matrix form.
-        temp_grad = [np.zeros(param[i].shape) for i in range(0, l)]
-        total_grad = [np.zeros(param[i].shape) for i in range(0, l)]
+        temp_grad = [np.zeros(param[i].shape) for i in range(l)]
+        total_grad = [np.zeros(param[i].shape) for i in range(l)]
 
-        for data_index in range(0, m):
+        for data_index in range(m):
             data_grad = NeuralNetwork.__get_datapoint_grad__(param, train_data[data_index, :].getT(),
                                                              train_label[data_index])
-            for theta_layer in range(0, l):
+            for theta_layer in range(l):
                 temp_grad[theta_layer] = temp_grad[theta_layer] + data_grad[theta_layer]
 
         for theta_layer in range(0, l):
@@ -153,7 +153,7 @@ class NeuralNetwork:
     def roll_vec(cls, mat_list):
         result = []
         for mat in mat_list:
-            result_list = mat.flatten('F')
+            result_list = mat.flatten('C')
             result.extend(result_list.tolist()[0])
         return np.array(result)
 
@@ -188,6 +188,9 @@ class NeuralNetwork:
 
     def train(self):
         print("Starting Training...")
+
+        # test_val = self.params[0] - self.unroll_params(self.roll_vec(self.params))[0]
+
         rolled_inital_param = self.roll_vec(self.params)
 
         print("Initial Cost/Grad:", self.get_cost_train(rolled_inital_param), self.get_grad(rolled_inital_param))
@@ -197,7 +200,7 @@ class NeuralNetwork:
             error = scipy.optimize.check_grad(self.get_cost_train, self.get_grad, rolled_inital_param, epsilon=0.0001)
             print('Grad Error', error)
 
-        use_gradient = False
+        use_gradient = True
         if use_gradient:
             f_grad = self.get_grad
         else:

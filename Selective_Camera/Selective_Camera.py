@@ -10,7 +10,7 @@ DEBUG_ENABLED = False
 
 
 def main():
-    img_res_side = 15
+    img_res_side = 25
     test_nn = nn.NeuralNetwork([img_res_side ** 2, 25, 1])
     usr_valid_responses = {'T', 'H'}
     usr_response = ''
@@ -23,13 +23,12 @@ def main():
         param_file = input('Load params? (Leave blank for default): ')
         if param_file:
             test_nn.load_param(param_file)
-        hyp_data, *args, img_list = create_test_data('data/test_data/')
+        hyp_data, *args, img_list = create_test_data('data/test_data/', img_res=img_res_side)
         hypothesis(test_nn, hyp_data, img_list)
 
 
 def hypothesis(input_neural_network, data, face_file_list=None):
     assert isinstance(input_neural_network, nn.NeuralNetwork)
-    img_res_side = 15
     result = input_neural_network.hypothesis(nn.NeuralNetwork.parse_data(data)).tolist()[0]
 
     for i in range(len(result)):
@@ -68,7 +67,7 @@ def train_data(input_neural_network, img_res_data, output_path=None):
     if output_path is None:
         output_path = str.format('traindata_{0}.json', str(datetime.datetime.now()))
 
-    # input_neural_network.save_param(output_path)
+    input_neural_network.save_param(output_path)
 
 
 def create_test_data(path, label=None, img_res=25):
