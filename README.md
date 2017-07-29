@@ -13,6 +13,21 @@ While this program will never develop a full sense of awareness like the camera,
 it does its best to mimic the thought process of a human brain through neurons
 represented by the Neural Network.
 
+## Instructions
+Numpy Scipy, and Pillow PIL is needed. If you don't have these modules installed, run
+
+```pip install numpy scipy pillow --user```
+
+(Note: For Linux/Mac with both Python2/3, replace `pip` with `pip3`.
+This script uses Python 3 and not 2).
+
+_Note: If you use Anaconda, I don't think you need anything else. 
+IIRC Anaconda bundles all of these modules on installation._
+
+For training, fill train_label.json with file name and attractiveness 
+(1 for being attractive, 0 otherwise). Fill the training faces into <projectdir>/data/train_data.
+and faces for hypothesis testing to <projectdir>/data/test_data/.
+
 ## Notes
 I could not include actual training data (faces) here due to privacy reasons.
 

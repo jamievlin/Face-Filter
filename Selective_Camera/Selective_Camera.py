@@ -65,22 +65,24 @@ def train_data(input_neural_network, img_res_data, output_path=None):
     print('Training successful.')
 
     if output_path is None:
-        output_path = str.format('traindata_{0}.json', str(datetime.datetime.now()))
+        output_path = str.format('traindata_{0}.json', str(datetime.datetime.now()).replace(':', '-').replace(' ', '_'))
 
     input_neural_network.save_param(output_path)
 
 
 def create_test_data(path, label=None, img_res=25):
     img_extensions = {'.jpg', '.png', '.tiff', '.tif'}
-    cond = lambda path_dir, file_name: os.path.isfile(os.path.join(path_dir, file_name)) and file_name.endswith(tuple(img_extensions))
-    image_list = [name for name in os.listdir(path) if cond(path, name)]
+
+    image_list = [name for name in os.listdir(path) if
+                  os.path.isfile(os.path.join(path, name)) and name.endswith(tuple(img_extensions))]
 
     final_data = []
     final_label = []
     for image_file in image_list:
         file_path = os.path.join(path, image_file)
-        final_data.append(create_data(img_res, file_path))
-        if label is not None:
+        if (label is None) or (image_file in label and not image_file.startswith('_')):
+            final_data.append(create_data(img_res, file_path))
+        if label is not None and image_file in label:
             final_label.append(float(label[image_file]))
 
         if DEBUG_ENABLED:

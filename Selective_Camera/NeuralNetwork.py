@@ -1,5 +1,4 @@
 import numpy as np
-import random as rand
 import scipy
 import scipy.optimize
 import json
